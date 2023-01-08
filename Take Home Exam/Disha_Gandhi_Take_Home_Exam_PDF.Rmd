@@ -1,0 +1,1110 @@
+---
+output:
+  html_document:
+    df_print: paged
+  prettydoc::html_pretty:
+    highlight: github
+    theme: cayman
+  pdf_document:
+    keep_tex: yes
+    latex_engine: pdflatex
+    fig_caption: yes
+    highlight: haddock
+header-includes:
+- \usepackage{sectsty}
+- \subsectionfont{\color{cyan}}
+- \usepackage{titling}
+- \pretitle{\begin{center} \includegraphics[width=2in,height=2in]{mccombs.png}\LARGE\\}
+- \posttitle{\end{center}}
+---
+
+|                                                     |
+|-----------------------------------------------------|
+| **Introduction to Machine Learning Take Home Exam** |
+| **Author: Disha Gandhi**                            |
+| **Date: 07/21/2021**                                |
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## CHAPTER 2 \~ QUESTION 10
+
+#### PART A
+
+The Boston dataset is as follows
+
+```{r }
+library(MASS)
+head(Boston)
+paste("The number of columns in this dataset are ", ncol(Boston),  sep="")
+paste("The number of rows in this dataset are ", nrow(Boston),  sep="")
+```
+
+The rows represent neighbourhoods in Boston for housing and the columns represent further details about each of those neighbourhoods which will act as predictors/features too when we want to predict one of those features.
+
+\pagebreak
+
+#### PART B
+
+```{r, fig.align='center'}
+pairs(Boston)
+res <- cor(Boston)
+round(res, 2)
+```
+
+Along with pairwise scatterplot I have also drawn the correlation matrix to get a better clarity of the features. We can observe over here that
+
+-- There is a **strong positive correlation** between **tax and indus, tax and nox, tax and rad, crim and rad, nox and rad, zn and dis, indus and age, nox and age, medv and rm, nox and indus.**
+
+-- There is a **strong negative correlation** between **dis and indus, nox and dis, rm and lstat, dis and age, dis and nox, lstat and medv.**
+
+-- There is a **very small positive correlation** between **crim and indus, crim and nox, crim and tax, crim and lstat, zn and rm, zn and medv, indus and ptratio, nox and crim, nox and lstat, age and crim, age and rad, age and tax, rad and ptratio, rad and lstat, tax and ptratio, tax and lstat, ptratio and lstat, black and medv, medv and zn.**
+
+-- There is a **very small negative correlation** between **crim and dis, crim and black, crim and medv, zn and indus, zn and nox, zn and age, zn and rad, zn and tax, zn and ptratio, zn and lstat, indus and rm, indus and black, indus and medv, nox and zn, nox and rm, nox and black, nox and medv, rm and ptratio, age and medv, dis and crim, dis and rad, dis and tax, dis and lstat, rad and black, rad and medv, tax and black, tax and medv, ptratio and medv, black and lstat, black and lstat.**
+
+-   A negative correlation implies inverse proportionality and a positive correlation implies direct proportionality.
+-   I made all the above assessments using graphs and correlation matrix.
+
+\pagebreak
+
+#### PART C
+
+```{r, fig.align='center'}
+plot(Boston$medv, Boston$crim)
+```
+
+The more expensive the homes, less crime because enhanced security
+
+```{r, fig.align='center'}
+plot(Boston$dis, Boston$crim)
+```
+
+The Closer to work-area, it will be less crime because it will be a densely populated area
+
+```{r, fig.align='center'}
+plot(Boston$rad, Boston$crim)
+```
+
+Higher index of accessibility to radial highways implies more crime because home are now farther from accessible areas.
+
+```{r, fig.align='center'}
+plot(Boston$tax, Boston$crim)
+```
+
+Higher tax rate, more crime
+
+```{r, fig.align='center'}
+plot(Boston$age, Boston$crim)
+```
+
+Older homes mean more crime
+
+-   I took only some features here based on the correlation score I received for them from above part. Selecting the ones with little or significant correlation.
+
+\pagebreak
+
+#### PART D
+
+```{r, fig.align='center'}
+par(mfrow=c(1,2))
+boxplot(Boston$crim,ylab="Crime Rate", main="Crime Rate Boxplot")
+hist(Boston$crim, breaks=25, xlab="Crime Rate", main="Crime Rate Histogram")
+summary(Boston$crim)
+```
+
+-   We can clearly see from above insights on Crime Rate that maximum or a large portion of Suburbs have their crime concentrated in between 0 and 1 and so there are very less suburbs going near the max value of 88.97. But they are a good significant ones. In the box plot we can clearly see that there are so many outliers which are present above the IQR which gives us a hint already that this feature does not follow normal distribution.
+
+```{r}
+paste("The number of suburbs in this dataset that have a crime rate of greater than 30 are ", nrow(subset(Boston, crim >= 30)),  sep="")
+```
+
+-   There are 8 suburbs that have crime rate stretching in the range 30-90. So these few suburbs should be taken into consideration to make them more hospitable and safe. These suburbs are causing the mean to increase to 3.6 because we can see that the median is still at 0.25, implying the majority concentration is less than 1.
+
+```{r, fig.align='center'}
+par(mfrow=c(1,2))
+boxplot(Boston$tax,ylab="Tax Rate", main="Tax Rate Boxplot")
+hist(Boston$tax, breaks=25, xlab="Tax Rate", main="Tax Rate Histogram")
+summary(Boston$tax)
+```
+
+-   The insights above on tax rate show that we can clearly seperate suburbs with low tax rates and high tax rates. Since the mean and median are not so far and there are no outliers we can assess that there are no extreme values. We can also see from the histogram that there are a lot of suburbs in the range of 650-800 and so we can state that some suburbs have a particularly high tax rate though not beyond the IQR and hence in the satifactory range. But yes there is a clear cut division between low taxed suburbs and high ones.
+
+```{r, fig.align='center'}
+par(mfrow=c(1,2))
+boxplot(Boston$ptratio,ylab="Pupil Teacher Ratio", main="Pupil Teacher Ratio Boxplot")
+hist(Boston$ptratio, breaks=25, xlab="Pupil Teacher Ratio", main="Pupil Teacher Ratio Histogram")
+summary(Boston$ptratio)
+```
+
+-   The insights above on pupil teacher ratio show that there is clearly no suburb having particularly high pupil teacher ratio, though are two having particularly low pupil teacher ratio. There are also some good number of them in the third quartile but since they are not causing a huge variation in the distribution we can not declare them as particularly high. The histogram says that the maximum suburbs are in the bucket of 20 but that is still not the maximum. The maximum is at 22. Hence no major extreme can be seen for this feature.
+
+\pagebreak
+
+#### PART E
+
+```{r}
+paste("The number of suburbs in this dataset bounding the charles river are ", nrow(subset(Boston, chas == 1)),  sep="")
+```
+
+#### PART F
+
+```{r}
+paste("The median pupil-teacher ratio of the suburbs in this town is ", median(Boston$ptratio),  sep="")
+```
+
+#### PART G
+
+There are two suburbs which have the lowest median value of owner occupied homes which is 5. Below are the values of other predictors for it.
+
+```{r}
+Boston[Boston$medv == min(Boston$medv),]
+```
+
+Let us look at the summary of the dataset to compare the above two suburbs.
+
+```{r}
+summary(Boston)
+```
+
+We can see that
+
+-- The crime rate(crim) for both of these suburbs is **above 3rd quartile.**
+
+-- The proportion of residential land zone(zn) is **minimum value** for both of them.
+
+-- The proportion of non retail business acres per town(indus) is **at the 3rd quartile.**
+
+-- The charles river bounding(chas) is **not present** for both.
+
+-- The nitrogen oxide concentration(nox) is **above 3rd quartile** for both.
+
+-- The average number of rooms per dwelling(rm) for both is **less than 1st quartile.**
+
+-- The age of the house(age) is **maximum** for them i.e both are very old suburbs.
+
+-- The distance from employment centres(dis) for both the suburbs is **less than 1st quartile.**
+
+-- The accessibility to radial highways(rad) is **maximum** for both.
+
+-- The property tax(tax) in these suburbs is **at 3rd quartile.**
+
+-- The pupil teacher ratio(pt ratio) in these suburbs is **at 3rd quartile** for both of them.
+
+-- The black population(black) is at **maximum** for 1st suburb and **above 1st quartile** for 2nd suburb.
+
+-- The population of lower status people(lstat) is **above 3rd quartile** for both of the suburbs.
+
+-- The median value of owner occupied homes(medv) is for obvious reasons at **minimum** for both.
+
+\pagebreak
+
+#### PART H
+
+```{r}
+paste("The number of suburbs in this dataset having more than 7 rooms per dwelling in average is ", nrow(subset(Boston, rm > 7)),  sep="")
+paste("The number of suburbs in this dataset having more than 8 rooms per dwelling in average is ", nrow(subset(Boston, rm > 8)),  sep="")
+```
+
+Let us look at those 13 suburbs having more than 8 rooms per dwelling in average
+
+```{r}
+summary(subset(Boston, rm > 8))
+```
+
+We can see here that
+
+-   Crime rate is lower for these suburbs.
+
+-   The population of blacks and lower status people is also comparatively high in these suburbs.
+
+-   Rest all the features are almost of the same range
+
+\pagebreak
+
+## CHAPTER 3 \~ QUESTION 15
+
+#### PART A
+
+##### **Single Predictor - ZN**
+
+```{r, warning = FALSE}
+attach(Boston)
+lm.zn.fit = lm(crim~zn)
+summary(lm.zn.fit)
+par(mfrow=c(1,2))
+plot(lm.zn.fit)
+abline(lm.zn.fit)
+```
+
+##### **Single Predictor - INDUS**
+
+```{r, warning = FALSE}
+lm.indus.fit = lm(crim~indus)
+summary(lm.indus.fit)
+par(mfrow=c(1,2))
+plot(lm.indus.fit)
+abline(lm.indus.fit)
+```
+
+##### **Single Predictor - CHAS**
+
+```{r, warning = FALSE}
+lm.chas.fit = lm(crim~chas)
+summary(lm.chas.fit)
+par(mfrow=c(1,2))
+plot(lm.chas.fit)
+abline(lm.chas.fit)
+```
+
+##### **Single Predictor - NOX**
+
+```{r, warning = FALSE}
+lm.nox.fit = lm(crim~nox)
+summary(lm.nox.fit)
+par(mfrow=c(1,2))
+plot(lm.nox.fit)
+abline(lm.nox.fit)
+```
+
+##### **Single Predictor - RM**
+
+```{r, warning = FALSE}
+lm.rm.fit = lm(crim~rm)
+summary(lm.rm.fit)
+par(mfrow=c(1,2))
+plot(lm.rm.fit)
+abline(lm.rm.fit)
+```
+
+##### **Single Predictor - AGE**
+
+```{r, warning = FALSE}
+lm.age.fit = lm(crim~age)
+summary(lm.age.fit)
+par(mfrow=c(1,2))
+plot(lm.age.fit)
+abline(lm.age.fit)
+```
+
+##### **Single Predictor - DIS**
+
+```{r, warning = FALSE}
+lm.dis.fit = lm(crim~dis)
+summary(lm.dis.fit)
+par(mfrow=c(1,2))
+plot(lm.dis.fit)
+abline(lm.dis.fit)
+```
+
+##### **Single Predictor - RAD**
+
+```{r, warning = FALSE}
+lm.rad.fit = lm(crim~rad)
+summary(lm.rad.fit)
+par(mfrow=c(1,2))
+plot(lm.rad.fit)
+abline(lm.rad.fit)
+```
+
+##### **Single Predictor - TAX**
+
+```{r, warning = FALSE}
+lm.tax.fit = lm(crim~tax)
+summary(lm.tax.fit)
+par(mfrow=c(1,2))
+plot(lm.tax.fit)
+abline(lm.tax.fit)
+```
+
+##### **Single Predictor - PTRATIO**
+
+```{r, warning = FALSE}
+lm.ptratio.fit = lm(crim~ptratio)
+summary(lm.ptratio.fit)
+par(mfrow=c(1,2))
+plot(lm.ptratio.fit)
+abline(lm.ptratio.fit)
+```
+
+##### **Single Predictor - BLACK**
+
+```{r, warning = FALSE}
+lm.black.fit = lm(crim~black)
+summary(lm.black.fit)
+par(mfrow=c(1,2))
+plot(lm.black.fit)
+abline(lm.black.fit)
+```
+
+##### **Single Predictor - LSTAT**
+
+```{r, warning = FALSE}
+lm.lstat.fit = lm(crim~lstat)
+summary(lm.lstat.fit)
+par(mfrow=c(1,2))
+plot(lm.lstat.fit)
+abline(lm.lstat.fit)
+```
+
+##### **Single Predictor - MEDV**
+
+```{r, warning = FALSE}
+lm.medv.fit = lm(crim~medv)
+summary(lm.medv.fit)
+par(mfrow=c(1,2))
+plot(lm.medv.fit)
+abline(lm.medv.fit)
+```
+
+-   All the predictors except show a very small p value (\<0.05) allowing us to conclude that all of them are statistically significant.
+
+-   The residual vs predictor plot for all of them except chas have significant trend lines that are close to 0. This proves that we can rely on all of these fitted models except for chas, where we can't see any trend and the residual values are far from zero.
+
+-   medv, dis, and age have quite a better linear regression line compared to other models showing they can be a good fit.
+
+#### PART B
+
+```{r}
+lm.all.fit = lm(crim~., data=Boston)
+summary(lm.all.fit)
+```
+
+-   We can see in the above summary that zn, dis, rad, black, and medv all have a p value less than 0.05 showing us that they are statistically significant to the above model and hence we can reject the null hypothesis for them.
+
+#### PART C
+
+```{r, fig.align='center'}
+x = c(coef(lm.zn.fit)[2],
+      coef(lm.indus.fit)[2],
+      coef(lm.chas.fit)[2],
+      coef(lm.nox.fit)[2],
+      coef(lm.rm.fit)[2],
+      coef(lm.age.fit)[2],
+      coef(lm.dis.fit)[2],
+      coef(lm.rad.fit)[2],
+      coef(lm.tax.fit)[2],
+      coef(lm.ptratio.fit)[2],
+      coef(lm.black.fit)[2],
+      coef(lm.lstat.fit)[2],
+      coef(lm.medv.fit)[2])
+y = coef(lm.all.fit)[2:14]
+plot(x, y, xlab="Single linear regression model coefficients", ylab="Multi linear regression model coefficients", main="Linear Regression Coefficient Comparison")
+```
+
+-   All the features have almost similar coefficients in both cases other than nox for which the single linear regression model seems to have a very large positive coefficient whereas the multi linear model has a moderate negative coefficient.
+
+#### PART D
+
+##### **Single Non Linear Predictor - ZN**
+
+```{r}
+lm.zn.fit = lm(crim~poly(zn,3))
+summary(lm.zn.fit)
+```
+
+##### **Single Non Linear Predictor - INDUS**
+
+```{r}
+lm.indus.fit = lm(crim~poly(indus,3))
+summary(lm.indus.fit)
+```
+
+##### **Single Non Linear Predictor - NOX**
+
+```{r}
+lm.nox.fit = lm(crim~poly(nox,3))
+summary(lm.nox.fit)
+```
+
+##### **Single Non Linear Predictor - RM**
+
+```{r}
+lm.rm.fit = lm(crim~poly(rm,3))
+summary(lm.rm.fit)
+```
+
+##### **Single Non Linear Predictor - AGE**
+
+```{r}
+lm.age.fit = lm(crim~poly(age,3))
+summary(lm.age.fit)
+```
+
+##### **Single Non Linear Predictor - DIS**
+
+```{r}
+lm.dis.fit = lm(crim~poly(dis,3))
+summary(lm.dis.fit)
+```
+
+##### **Single Non Linear Predictor - RAD**
+
+```{r}
+lm.rad.fit = lm(crim~poly(rad,3))
+summary(lm.rad.fit)
+```
+
+##### **Single Non Linear Predictor - TAX**
+
+```{r}
+lm.tax.fit = lm(crim~poly(tax,3))
+summary(lm.tax.fit)
+```
+
+##### **Single Non Linear Predictor - PTRATIO**
+
+```{r}
+lm.ptratio.fit = lm(crim~poly(ptratio,3))
+summary(lm.ptratio.fit)
+```
+
+##### **Single Non Linear Predictor - BLACK**
+
+```{r}
+lm.black.fit = lm(crim~poly(black,3))
+summary(lm.black.fit)
+```
+
+##### **Single Non Linear Predictor - LSTAT**
+
+```{r}
+lm.lstat.fit = lm(crim~poly(lstat,3))
+summary(lm.lstat.fit)
+```
+
+##### **Single Non Linear Predictor - MEDV**
+
+```{r}
+lm.medv.fit = lm(crim~poly(medv,3))
+summary(lm.medv.fit)
+```
+
+-   As we can see above,
+
+-- zn has a lower p value i.e statistical significance for degrees 1 and 2.
+
+-- indus has a lower p value i.e statistical significance for degrees 1, 2, and 3.
+
+-- nox has a lower p value i.e statistical significance for degrees 1, 2, and 3.
+
+-- rm has a lower p value i.e statistical significance for degrees 1 and 2.
+
+-- age has a lower p value i.e statistical significance for degrees 1, 2, and 3.
+
+-- dis has a lower p value i.e statistical significance for degrees 1, 2, and 3.
+
+-- rad has a lower p value i.e statistical significance for degrees 1 and 2.
+
+-- tax has a lower p value i.e statistical significance for degrees 1 and 2.
+
+-- ptratio has a lower p value i.e statistical significance for degrees 1, 2, and 3.
+
+-- black has a lower p value i.e statistical significance for degree 1 only.
+
+-- lstat has a lower p value i.e statistical significance for degrees 1 and 2.
+
+-- medv has a lower p value i.e statistical significance for degrees 1, 2, and 3.
+
+-   So there is evidence that we can fit all features into a non-linear model other than black and chas for which non linear relationship cannot exist as visible by the p value.
+
+## CHAPTER 6 \~ QUESTION 9
+
+```{r, include = FALSE}
+library(ISLR)
+set.seed(10)
+sum(is.na(College))
+```
+
+#### PART A
+
+The dataset is split into train and test as follows:
+
+```{r, echo=TRUE}
+attach(College)
+
+## 80% of the sample size
+train_ind=sample(c(TRUE ,FALSE), nrow(College),rep=TRUE, prob=c(0.8,0.2))
+
+train <- College[train_ind, ]
+test <- College[-train_ind, ]
+```
+
+#### PART B
+
+```{r}
+lm.college.fit = lm(Apps~., data=train)
+lm.college.pred = predict(lm.college.fit, test)
+paste("The mean square test error on the linear model using least squares is ",mean((test$Apps - lm.college.pred)^2) ,sep="")
+```
+
+#### PART C
+
+```{r, warning=FALSE, error = FALSE}
+library(glmnet)
+train.matrix = model.matrix(Apps~., data=train)
+test.matrix = model.matrix(Apps~., data=test)
+grid = 10 ^ seq(4, -2, length=100)
+mod.ridge = cv.glmnet(train.matrix, train[, "Apps"], alpha=0, lambda=grid, thresh=1e-12)
+best.lam = mod.ridge$lambda.min
+paste("The best lambda for our ridge model is ",best.lam ,sep="")
+```
+
+```{r}
+ridge.pred = predict(mod.ridge, newx=test.matrix, s=best.lam)
+paste("The mean square test error on the ridge model is ",mean((test$Apps - ridge.pred)^2),sep="")
+```
+
+#### PART D
+
+```{r}
+mod.lasso = cv.glmnet(train.matrix, train[, "Apps"], alpha=1, lambda=grid, thresh=1e-12)
+best.lam = mod.lasso$lambda.min
+paste("The best lambda for our lasso model is ",best.lam ,sep="")
+```
+
+```{r}
+lasso.pred = predict(mod.lasso, newx=test.matrix, s=best.lam)
+paste("The mean square test error on the lasso model is ",mean((test$Apps - lasso.pred)^2),sep="")
+
+```
+
+The list of coefficient values after fitting lasso model is
+
+```{r}
+mod.lasso = glmnet(model.matrix(Apps~., data=College), College$Apps, alpha=1)
+predict(mod.lasso, s=best.lam, type="coefficients")
+```
+
+We can clearly see here that there are minimum two zero coefficients for this dataset.
+
+#### PART E
+
+```{r, fig.align='center'}
+library(pls)
+pcr.fit = pcr(Apps~., data=train, scale=TRUE, validation="CV")
+validationplot(pcr.fit, val.type="MSEP")
+```
+
+We can clearly see from the above plot that when the **number of components is 10** we receive a considerable low CV score. So we now predict on the test dataset using M=10.
+
+```{r}
+pcr.pred = predict(pcr.fit, test, ncomp=10)
+paste("The mean square test error on the pcr model is ",mean((test$Apps - pcr.pred)^2),sep="")
+```
+
+#### PART F
+
+```{r, fig.align='center'}
+pls.fit = plsr(Apps~., data=train, scale=TRUE, validation="CV")
+validationplot(pls.fit, val.type="MSEP")
+```
+
+We can clearly see from the above plot that when the **number of components is 10** we receive a considerable low CV score. So we now predict on the test dataset using M=10.
+
+```{r}
+pls.pred = predict(pls.fit, test, ncomp=10)
+paste("The mean square test error on the pls model is ",mean((test$Apps - pls.pred)^2),sep="")
+```
+
+#### [PART G]{style="color:maroon"}
+
+```{r, fig.align='center'}
+test.avg = mean(test$Apps)
+lm.test.r2 = 1 - mean((test$Apps - lm.college.pred)^2) /mean((test$Apps - test.avg)^2)
+ridge.test.r2 = 1 - mean((test$Apps - ridge.pred)^2) /mean((test$Apps - test.avg)^2)
+lasso.test.r2 = 1 - mean((test$Apps - lasso.pred)^2) /mean((test$Apps - test.avg)^2)
+pcr.test.r2 = 1 - mean((test$Apps - pcr.pred)^2) /mean((test$Apps - test.avg)^2)
+pls.test.r2 = 1 - mean((test$Apps - pls.pred)^2) /mean((test$Apps - test.avg)^2)
+barplot(c(lm.test.r2, ridge.test.r2, lasso.test.r2, pcr.test.r2, pls.test.r2), col="maroon", names.arg=c("LM", "Ridge", "Lasso", "PCR", "PLS"), main="Test R-square error")
+```
+
+-   This plot shows that accuracy for all models is about 0.9 but PCR has a relatively lower accuracy. So we can predict all model except PCR has a high accuracy.
+
+-   Linear Regression, Ridge, and Lasso have comparable test errors. But PCR has a significantly high test error rate when compared to other models.
+
+-   PLS shows the test error rate in the same range as linear regression, Lasso, and Ridge just a little less and hence slightly better in this dataset.
+
+## CHAPTER 6 \~ QUESTION 11
+
+#### [PART A]{style="color:maroon"}
+
+##### **Best Subset Selection Model**
+
+```{r, fig.align='center'}
+
+library(leaps)
+
+# identifying the best subset selection
+reg_fit= regsubsets (crim ~.,Boston, nvmax = 13)
+
+#storing and finding the summary
+summary_reg=summary(reg_fit)
+summary_reg
+
+#par(mfrow=c(2,2))
+plot(summary_reg$adjr2 ,xlab="No. of Variables ",ylab="Adjusted RSq",type="l")
+
+max_rss=which.max(summary_reg$adjr2)
+max_rss
+```
+
+```{r}
+paste("The ideal number of features as suggested by Best Subset Selection is ",which.max(summary_reg$adjr2) ,sep="")
+paste("And the corresponding adjusted r square error for the test dataset is ",max(summary_reg$adjr2) ,sep="")
+```
+
+The list of those 9 features as suggested above is:
+
+```{r}
+coef(reg_fit, 9)
+```
+
+##### **Linear Regression Model**
+
+What I then did was fit a multi linear regression model on those 9 features and check the RMSE.
+
+```{r}
+lm.fit = lm(crim~zn+nox+rm+dis+rad+tax+ptratio+black+medv)
+summary(lm.fit)
+```
+
+We observed an RMSE of **6.439**, which is lower than best subset selection.
+
+##### **Ridge Regression**
+
+```{r, fig.align='center'}
+#RIDGE
+x = model.matrix(crim ~ .-1,Boston)
+y = Boston$crim
+cv.ridge = cv.glmnet(x, y, alpha=0, type.measure = "mse")
+plot(cv.ridge)
+```
+
+```{r}
+paste("The root mean square test error on the ridge model is ",sqrt(cv.ridge$cvm[cv.ridge$lambda == cv.ridge$lambda.1se]),sep="")
+```
+
+##### **Lasso Regression**
+
+```{r, fig.align='center'}
+#LASSO
+x = model.matrix(crim ~ .-1, Boston)
+y = Boston$crim
+cv.lasso = cv.glmnet(x, y, alpha=1, type.measure = "mse")
+plot(cv.lasso)
+```
+
+```{r}
+paste("The root mean square test error on the lasso model is ",sqrt(cv.lasso$cvm[cv.lasso$lambda == cv.lasso$lambda.1se]),sep="")
+```
+
+##### **Principal Components Regression**
+
+```{r}
+pcr.fit = pcr(crim ~.,data = Boston, scale = TRUE, validation = "CV")
+summary(pcr.fit)
+```
+
+We can here clearly see that 13 component pcr model has a cv error of **6.606**
+
+-   To summarize we can observe that 9 component linear regression followed by 9 component best subset model followed by 13 component pcr have the cv errors in this order respectively. Hence the linear regression model seems to be a good fit
+
+#### [PART B]{style="color:maroon"}
+
+-   After looking at various models that we fit above, we can see that the lowest cv error is observed for the 9 component Linear Regression Model. The cv error for 13 component PCR is only a little higher than this.
+
+-   So my proposal would be to fit a best subset model to find out the ideal features and then use those features to fit a linear regression model.
+
+#### [PART C]{style="color:maroon"}
+
+-   My chosen model involves only 9 features as listed above, since the test RMSE is lowest when only these 9 features are fit. Upon fitting a Linear model with all features, the RMSE was slightly higher.
+
+## CHAPTER 8 \~ QUESTION 8
+
+#### [PART A]{style="color:maroon"}
+
+The dataset is split into train and test as follows:
+
+```{r, echo=TRUE}
+library(ISLR)
+attach(Carseats)
+ 
+## 80% of the sample size
+smp_size <- floor(0.80 * nrow(Carseats))
+ 
+train_ind <- sample(seq_len(nrow(Carseats)), size = smp_size)
+ 
+train <- Carseats[train_ind, ]
+test <- Carseats[-train_ind, ]
+```
+
+#### [PART B]{style="color:maroon"}
+
+```{r}
+library(tree)
+tree.carseats = tree(Sales ~., data = train)
+summary(tree.carseats)
+```
+
+```{r, fig.align='center'}
+plot(tree.carseats)
+text(tree.carseats, pretty = 0)
+```
+
+```{r}
+pred.carseats = predict(tree.carseats, test)
+paste("The  mean square test error on the regression tree is ",mean((test$Sales - pred.carseats)^2) ,sep="")
+```
+
+-   The tree here shows that ShelveLoc and Price are the two important features for splitting the tree.
+
+-   Even the residual deviance is not so high implying the tree was fit good on the training dataset.
+
+#### [PART C]{style="color:maroon"}
+
+```{r, fig.align='center'}
+cv.carseats = cv.tree(tree.carseats, FUN = prune.tree)
+par(mfrow = c(1, 2))
+plot(cv.carseats$size, cv.carseats$dev, type = "b")
+plot(cv.carseats$k, cv.carseats$dev, type = "b")
+```
+
+Since we get the lowest value of the size variable at 10 components, we will fit the pruned tree with 10 features.
+
+```{r, fig.align='center'}
+pruned.carseats = prune.tree(tree.carseats, best = 10)
+plot(pruned.carseats)
+text(pruned.carseats, pretty = 0)
+```
+
+```{r}
+pred.pruned = predict(pruned.carseats, test)
+paste("The  mean square test error on the pruned regression tree is ", mean((test$Sales - pred.pruned)^2) ,sep="")
+```
+
+-   We can see over here that the mean square test error just increased after prunning, telling us that the vanilla regression tree is a better version for our dataset than pruned one.
+
+-   ALso, even after prunning the tree we get the same two features, ShelveLoc and Price as the top two features for the best split of the tree.
+
+#### [PART D]{style="color:maroon"}
+
+```{r}
+library(randomForest)
+bag.carseats = randomForest(Sales~ ., data = train, mtry = 10, importance = TRUE)
+bag.pred = predict(bag.carseats, test)
+paste("The  mean square test error in bagging is ", mean((test$Sales - bag.pred)^2) ,sep="")
+```
+
+```{r}
+importance(bag.carseats)
+```
+
+```{r, fig.align='center'}
+varImpPlot(bag.carseats)
+```
+
+-   As we know, IncMSE and IncNodePurity both should be high for a feature to be considered important.
+
+-   For our data, **ShelveLoc, Price, CompPrice, and Age** are all important in the respective order as listed. This is also visible from the graph where we have plotted these things.
+
+-   Also, the MSE on test data is significantly reduced for bagging when compared with Regression Trees even after optimization.
+
+#### [PART E]{style="color:maroon"}
+
+```{r}
+rf.carseats = randomForest(Sales ~ ., data = train, mtry = 5, ntree = 400, 
+     importance = TRUE)
+rf.pred = predict(rf.carseats, test)
+paste("The  mean square test error in Random Forest is ", mean((test$Sales - rf.pred)^2) ,sep="")
+```
+
+```{r}
+importance(rf.carseats)
+```
+
+```{r, fig.align='center'}
+#add mse also and imp of shelve loc
+value.of.m = 10
+x = 1:10
+test.error = vector()
+for (i in 1:value.of.m){
+   rf.carseats = randomForest(Sales ~ ., data = train, mtry = i, ntree = 400, 
+       importance = T)
+   rf.pred = predict(rf.carseats, test)
+   test.error[i] = mean((test$Sales - rf.pred)^2)
+}
+test.error
+plot(x,test.error, xlab="Value of m", main="Value of m vs the test error")
+```
+
+-   Upon looking at the important features in Random Forest we can clearly see that the same set of features come at the top that came for other regression trees and bagging. Hence we can conclude that all the methods give the same set of important features that we listed up.
+
+-   I also plotted a graph to show the affect of m on the random forest model while evaluating the test error obtained for each iteration. I have also listed the test errors for clarity.
+
+-   At m=5, the test error is the lowest, and hence I selected that to fit my random forest model up.
+
+-   But to conclude, we can see that as the value of m increases, the test error decreases.
+
+## CHAPTER 8 \~ QUESTION 11
+
+#### [PART A]{style="color:maroon"}
+
+```{r, echo=TRUE}
+library(ISLR)
+attach(Caravan)
+train.ind = 1:1000
+caravan <- Caravan
+caravan$Purchase = ifelse(caravan$Purchase == "Yes", 1, 0)
+train = caravan[train.ind, ]
+test = caravan[-train.ind, ]
+```
+
+```{r, include=FALSE}
+library(gbm)
+set.seed(10)
+```
+
+#### [PART B]{style="color:maroon"}
+
+```{r}
+caravan.boost=gbm(Purchase~.,data=train,n.trees=1000, distribution="bernoulli", interaction.depth =4,shrinkage =0.01,verbose=F)
+summary(caravan.boost)
+```
+
+-   We can here see the weighted list of features which tell us which features are important and which ones are not. Also the features are arranged in the decreasing order which will help us in understanding their importance.
+-   The graph is also plotting the same thing. Basically how much does each feature influence.
+
+#### [PART C]{style="color:maroon"}
+
+```{r}
+boost.probability = predict(caravan.boost, test, n.trees = 1000, type = "response")
+boost.pred = ifelse(boost.probability > 0.2, 1, 0)
+```
+
+After making the predictions, we arrive on the following confusion matrix for Boosting:
+
+```{r}
+table(test$Purchase, boost.pred)
+```
+
+```{r}
+paste("The fraction of people predicted to make a purchase and even made one via Boosting is ", round(29/(178 + 29), 3) ,sep="")
+```
+
+```{r}
+caravan.lm = glm(Purchase~., data = train, family = binomial)
+lm.probability = predict(caravan.lm, test, type = "response")
+lm.pred = ifelse(lm.probability > 0.2, 1, 0)
+```
+
+After making the predictions, we arrive on the following confusion matrix for Logistic Regression:
+
+```{r}
+table(test$Purchase, lm.pred)
+```
+
+```{r}
+paste("The fraction of people predicted to make a purchase and even made one via Logistic Regression is ", round(58/(350+58), 3) ,sep="")
+```
+
+-   We can observe here that the fraction of people predicted to make a purchase and even made one is almost similar for both models, Just the logistic regression having a 0.2% greater probability which is extremely small. But yes, they're nearly equivalent.
+
+## CHAPTER 10 \~ QUESTION 7
+
+We will find both the correlation factor and euclidean distance here for our dataset and check if the proportionality holds
+
+```{r}
+library(ISLR)
+attach(USArrests)
+set.seed(10)
+scaled.df = scale(USArrests)
+eucd.dist = dist(scaled.df)^2
+corr.factor = as.dist(1 - cor(t(scaled.df)))
+summary(corr.factor/eucd.dist)
+```
+
+Upon looking at the summary, we can clearly see here that the proportionality holds.
+
+## OUTSIDE THE TEXTBOOK \~ QUESTION 1
+
+#### [PART A]{style="color:maroon"}
+
+In order to assess the effect of beauty into course ratings it is essential for us to first understand the direct relationship between beauty and course ratings and then evaluate the influence of other determinants together on the course ratings.
+
+```{r, include=FALSE}
+beauty.df <- read.csv("BeautyData.csv")
+set.seed(10)
+sum(is.na(beauty.df))
+```
+
+```{r}
+## 80% of the sample size
+smp_size <- floor(0.80 * nrow(beauty.df))
+ 
+train_ind <- sample(seq_len(nrow(beauty.df)), size = smp_size)
+ 
+train <- beauty.df[train_ind, ]
+test <- beauty.df[-train_ind, ]
+```
+
+In order to find out the dependency of Course Eval Rating for instructors we will estimate the effect of BeautyScore by a linear regression model.
+
+```{r}
+lm.beauty.fit = lm(CourseEvals~BeautyScore, data=train)
+summary(lm.beauty.fit)
+```
+
+```{r}
+lm.pred = predict(lm.beauty.fit, test)
+paste("The mean square error of single linear regression model for beauty score is ", mean((test[, "CourseEvals"] - lm.pred)^2) ,sep="")
+```
+
+The p value seems to be less than 0.05 showing statistical significance and even the SE seems to be on the lower end but the t value is greater than 2. We will now try multi linear regression model with all the other features. All the other features seem to be important too and hence to measure the impact of one while other features are present is also essential.
+
+```{r}
+lm.all.fit = lm(CourseEvals~., data=train)
+summary(lm.all.fit)
+```
+
+```{r}
+lm.pred = predict(lm.all.fit, test)
+paste("The mean square error of multi linear regression model for all features is ", mean((test[, "CourseEvals"] - lm.pred)^2) ,sep="")
+```
+
+We can clearly see here that the coefficients are both negative and positive which is obvious as as if a professor is not a native English speaker, he/she will have problems communicating to the class about the course leading to less productivity. Whereas a negative coefficient in female feature should not be there. This hints us that there might be a bias to rate female instructors less which might be just a bias or there might be genuine issues in understanding those courses. We can only speculate here. But this data does tell us that beauty has a positive coefficient for course ratings which means that it influences productivity to an extent but the coefficient is similar in weightage to other features and so it is not one of the dominating features. The p value here too seems to be less than 0.05 showing statistical significance and the accuracy has just improved while the mean square error dropping significantly. This shows us that Multi linear regression model is a better fit compared to single.
+
+For further insights, I have also tried to fit partial least squares:
+
+```{r, fig.align='center'}
+pls.fit = plsr(CourseEvals~., data=train, scale=T, validation="CV")
+validationplot(pls.fit, val.type="MSEP")
+```
+
+```{r}
+pls.pred = predict(pls.fit, test, ncomp=2)
+paste("The mean square error of partial least squares regression model for all features is ", mean((test[, "CourseEvals"] - pls.pred)^2) ,sep="")
+```
+
+The mean square error in this case is very similar to the error obtained in multi linear regression model. Hence both seem to fit very well and give us a relation between course evals and other determinants.
+
+#### [PART B]{style="color:maroon"}
+
+```{r}
+paste("The correlation between beauty score and course ratings is ", round(cor(train$CourseEvals,train$BeautyScore),2) ,sep="")
+```
+
+-   The question being asked in this paper is whether the Beauty quotient of an instructor genuinely increases the productivity of students in their courses or it is just a bias in the mind of students that causes a cloud of judgement and makes them give ratings without any logical conclusion.
+
+-   When we ran our regression model we saw that beauty has a positive impact but it is not that significant to declare that it alone is an influence in the increase in ratings for an instructor. The correlation above between beauty and ratings feature show a slight positive correlation which might cause a small collinearity between them thus influencing the regression fit.
+
+-   Now even if beauty is influencing, it might be that beauty increases a person's self confidence and hence causes them to communicate better and effectively. Or it can also be true that the natural human bias forces a person to discriminate and give better ratings to good looking professors. We can only conclude on this if we are 100% sure that our audience is unbiased and hence the direct proportionality of beauty score is purely related to increase in productivity. And for this we need to generate the target data set differently in different conditions.
+
+-   Beauty should ideally not be an important factor in determining the ability of a professor to teach well. But as our results show that it is an important feature then these ratings should not be the grounds for an economic decision.
+
+## OUTSIDE THE TEXTBOOK \~ QUESTION 2
+
+To answer part A and B we need to encode brick column and also generate two new columns N2 and N3 so that we fit them and generate analysis.
+
+```{r, include=FALSE}
+midcity.df <- read.csv("MidCity.csv")
+set.seed(10)
+sum(is.na(midcity.df))
+midcity.df$N2 = ifelse(midcity.df$Nbhd == 2, 1, 0)
+midcity.df$N3 = ifelse(midcity.df$Nbhd == 3, 1, 0)
+midcity.df$Brick = ifelse(midcity.df$Brick == 'Yes', 1, 0)
+```
+
+After generating the required columns, we fit a multi linear regression model and check the coefficients for the required features to check for null hypothesis.
+
+```{r}
+lm.allcity.fit = lm(Price~Offers+SqFt+Brick+Bedrooms+Bathrooms+N2+N3, data=midcity.df)
+summary(lm.allcity.fit)
+```
+
+#### [PART A]{style="color:maroon"}
+
+This part requires us to evaluate if brick houses cause a premium and so we will have to isolate the coefficient for brick houses and get the confidence interval using the above model fit.
+
+```{r}
+confint(lm.allcity.fit, 'Brick', level=0.95)
+```
+
+We can see here that 95% confidence interval for coefficient of Brick houses is [13373.89, 21220.81]. Now since 0 is not present in this confidence interval, we can reject the null hypothesis that coefficient of Brick houses will be zero anytime and so brick house is an important feature with statistical significance that generates a premium. It's value will never be negative and hence there will always be a premium.
+
+#### [PART B]{style="color:maroon"}
+
+This part requires us to evaluate if Neighborhood 3 cause a premium and so we will have to isolate the coefficient for Neighborhood 3 and get the confidence interval using the above model fit.
+
+```{r}
+confint(lm.allcity.fit, 'N3', level=0.95)
+```
+
+We can see here that 95% confidence interval for coefficient of Neighborhood 3 is [14446.33, 26915.75]. Now since 0 is not present in this confidence interval, we can reject the null hypothesis that coefficient of Neighborhood 3 will be zero anytime and so living in Neighborhood 3 is an important feature with statistical significance that generates a premium. People living in Neighborhood 3 will always pay extra since the premium is positive.
+
+#### [PART C]{style="color:maroon"}
+
+This part requires us to evaluate if Neighborhood 2 and Neighborhood 1 can be merged into older neighborhood. If N2 is not statistically significant then we can declare it as not important. Hence we will check the null hypothesis for N2 by looking at it's confidence interval.
+
+```{r}
+confint(lm.allcity.fit, 'N2', level=0.95)
+```
+
+After looking at the confidence interval for N2 [???6306, 3184], we can clearly see that 0 lies in this range and hence we cannot reject the null hypothesis. Therefore Neighborhood 2 can be merged with Neighborhood 1 because in certain cases it might not be significant and in those cases Neighborhood 1 can play it's role.
+
+#### [PART C]{style="color:maroon"}
+
+To evaluate the premium generated by brick houses in neighborhood 3, we will have to write a new feature formed by an and operation on brick and neighborhood 3. After generating this feature we will again fit a multi linear regression model with all of the previously selected features plus this one and then again look at the confidence interval for this feature on the fitted model.
+
+```{r}
+midcity.df$BrickN3<-midcity.df$Brick*midcity.df$N3
+lm.allcity.fit = lm(Price~Offers+SqFt+Brick+Bedrooms+Bathrooms+N2+N3+BrickN3, data=midcity.df)
+summary(lm.allcity.fit)
+confint(lm.allcity.fit, 'BrickN3', level=0.95)
+```
+
+As we can see that the confidence interval for Brick houses in Neighborhood 3 is [1933.91, 18429.24]. There is no 0 in the range and so we can reject the null hypothesis. That implies that people are ready to pay extra premium/price for a brick house in neighborhood 3.
+
+## OUTSIDE THE TEXTBOOK \~ QUESTION 3
+
+#### PART A 
+
+Even if we get the data from different cities on the crime rate and the police deployed on the streets, **we never will be able to identify the causal relationship between them. i.e what caused what.** It is possible that more crime led to more police being deployed or more police is leading to increased crime. In order to actually find the dependency between them, hypothetical scenarios will have to be created where in we can evaluate that keeping other determinants/features constant who influences who. Obviously creating such scenarios is practically not possible. Hence simply running the regression on these both won't give any significant results **until we can simulate favorable situations** to generate data that answers the above question first.
+
+#### [PART B]{style="color:maroon"}  
+
+The researchers at UPENN helped us by **creating a simulated natural environment** for which if we collect data we can actually **answer the relationship between crime and police.** On one of the potential high alert days due to terror threats, the mayor deployed more police. So technically more police was deployed and we could now assess it's impact on crime rate. **Their approach:** They controlled two features, ridership in metro, and the number of police. They both have a negative relationship with the crime rate as visible in Table 2 **(negative coefficient).** So you never know if the crime is reduced that is because of less people in the metros(more control on ridership) or more number of police deployed on the streets.
+
+#### [PART C]{style="color:maroon"}  
+
+In order to find out the effect of number of police, it is essential to consider other possible features too on crime rate. Because if we have to isolate the police strength we have to determine the coefficient of other possible determinants. One of them is less number of people which happens on high alert days and controlling ridership can simulate that. Now on high alert days police strength increases and crime reduces but along with that number of people on street is also reducing.
+
+Because of the reduce in the number of people on the street, it is also possible that even the criminals won't choose to step out thus reducing the crime rate. So even in this simulated situation more number of people might not be the cause for reduced crime rate even though they share a negative association. Hence it was essential for them to control metro ridership to account for this factor.
+
+#### [PART D]{style="color:maroon"} 
+
+Table 4 is measuring the **effect of high alert days and the above analysis in different regions of Washington DC**. The coefficient for district 1 is higher than other districts maybe because district 1 has a higher threat causing the mayor to deploy more police over there or maybe some other reason causing the crime rate to reduce much more. None the less **both have a negative coefficient** implying an overall reduction in the crime rate.
+
+## OUTSIDE THE TEXTBOOK \~ QUESTION 4
+
+##### **My Contribution in the Final Group Project**
+
+-   With a very interesting dataset on regression problem we started our brainstorming session on how to approach the problem. But upon looking at it closely we found out that it is not competitive enough and so we again searched a dataset from the available options, 2 options provided by each member including me. We finalized on the credit history tracking and credit approval classification problem.
+
+-   The challenge was to use a logic to convert the credit history to ideal buckets for classification. Over here my suggestion was to consider 3 buckets, 0(good guys), 1(defaulting guys but paying it in a while), and 2(bad guys not paying). But for the sake of simplicity we went ahead with only 2 buckets, 0(good guys) and 1(bad guys).
+
+-   Next task was to study the data and perform EDA so that we can fit the right model. I did the missing value analysis and all the required encoding. We used get_dummies function from python for encoding the categorical data as it uses n-1 bits over one hot encoding.
+
+-   We all took multiple iterations to understand and perform uni-variate and bivariate analysis till we could come together on the right set of features which were correlated to the credit approval feature.
+
+-   After splitting the train and test data along with a validation set into 80:20, I moved to implementing Random Forest Algorithm to classify the credit history feature. Others similarly took one model each for implementation.
+
+-   At first I implemented plain vanilla Random Forest Algorithm and checked the confusion matrix and recall score. We had decided to focus on recall score because according to our use case solving the Type 1 error was our priority. The bank may miss out good potential customers and the corresponding revenue from them but it should not lend the money to wrong customers. Hence our target was to optimize recall obtained here. In this approach we received a recall of 0.04 which was very bad.
+
+-   I then performed Random grid search CV to do hyper parameter tuning for my model and observed a very small increase in the recall score which was not a big motivation. Here I learnt about various parameters present in Random Forest Algorithm and how to ideally fit them into the model.
+
+-   I further also plotted feature importance and probability distribution function(PDF). In the feature importance graph, I could see a stark similarity in the top features here and what we observed in bivariate analysis. That's when we knew we are on the right line. Our PDF showed us the overlapping of both buckets and that we will have to reduce our threshold to as low as 0.13 if we want significant classification.
+
+-   Once everyone was done with their implementation, we concluded a final model and converted our jupyter cells into slides for presentation and prepared for our respective parts.
+
+-   Some of the essential lessons I learnt were, trees and their optimization, random grid search, importance of cross validation, bivariate analysis. And some obvious lessons like team work, segregation of duties, collaboration on presentations, even virtually for that case.
